@@ -229,6 +229,212 @@ sudo mount -a
 ---
 
 #### 9) أي تحسينات أو تعليقات إضافية منك (Optional improvements I add)
+---
+### Question 2
+
+---
+
+#### 1) Original question (verbatim, English)
+
+In Red Hat Enterprise Linux 9 (RHEL 9), how can you configure SELinux (Security-Enhanced Linux) to operate in 'permissive' mode? Provide a concise explanation of your steps.
+
+To set SELinux to "permissive" mode in RHEL 9, edit the SELinux configuration file located at /etc/selinux/config. Change the line SELINUX=enforcing to SELINUX=permissive. This tells SELinux to log potential violations instead of enforcing policy, allowing all operations but reporting actions that would have been blocked in enforcing mode. After making this change, reboot the system or run setenforce 0 to apply the changes immediately. This mode is useful for troubleshooting and understanding SELinux policies without impacting system functionality.
+
+---
+
+#### 2) الترجمة بالعربي:
+
+في نظام Red Hat Enterprise Linux 9، كيف يمكنك ضبط SELinux (لينكس المحسّن بالأمان) ليعمل في وضع "permissive"؟ قدّم شرحاً موجزاً لخطواتك.
+
+لضبط SELinux على وضع "permissive" في RHEL 9، قم بتحرير ملف إعدادات SELinux الموجود في `/etc/selinux/config`، وقم بتغيير السطر `SELINUX=enforcing` إلى `SELINUX=permissive`. هذا الإعداد يجعل SELinux يسجّل الانتهاكات المحتملة بدلاً من تطبيق السياسة بشكل صارم، بحيث يسمح بكل العمليات لكنه يبلغ عن الأفعال التي كان سيمنعها في وضع التنفيذ. بعد إجراء التغيير، أعد تشغيل النظام أو نفّذ الأمر `setenforce 0` لتطبيق التغييرات فوراً. هذا الوضع مفيد لاستكشاف الأخطاء وفهم سياسات SELinux بدون التأثير على وظائف النظام.
+
+---
+
+#### 3) الحل والخطوات المفصلة (Solution — step-by-step)
+
+📌 **ملخص قصير:** المطلوب نخلي SELinux يشتغل في وضع "permissive" عشان يسجّل الانتهاكات بس ومايمنعش العمليات. ده مفيد وقت الـ troubleshooting.
+
+---
+
+🔧 **الخطوات العملية:**
+
+**1. تحقق من الوضع الحالي لـ SELinux**
+
+```bash
+getenforce
+```
+
+💬 ده بيطبع الوضع الحالي: Enforcing أو Permissive أو Disabled.
+
+---
+
+**2. تغييره فوراً بدون reboot (مؤقت)**
+
+```bash
+sudo setenforce 0
+```
+
+💬 الأمر ده بيحوّل SELinux لـ permissive مؤقتاً لحد الـ reboot الجاي.
+
+تحقق بعد التغيير:
+
+```bash
+getenforce
+# Expected output: Permissive
+```
+
+---
+
+**3. تغييره بشكل دائم (Persistent)**
+افتح ملف `/etc/selinux/config`:
+
+```bash
+sudo vi /etc/selinux/config
+```
+
+غيّر السطر:
+
+```text
+SELINUX=enforcing
+```
+
+إلى:
+
+```text
+SELINUX=permissive
+```
+
+💬 السطر ده بيتحدد وضع SELinux عند كل boot. التغيير هنا بيخلي الوضع Permissive بعد كل reboot.
+
+---
+
+**4. إعادة تشغيل النظام أو تطبيق التغيير فوراً**
+لو عايز تطبقه دلوقتي بدون restart:
+
+```bash
+sudo setenforce 0
+```
+
+ولو هتعمل restart:
+
+```bash
+sudo reboot
+```
+
+---
+
+#### 4) الأخطاء الشائعة وازاي نحلها
+
+* ❌ **نسيان sudo أو تعديل الملف من غير صلاحيات root**
+  🔧 استخدم:
+
+  ```bash
+  sudo -i
+  ```
+
+  أو:
+
+  ```bash
+  sudoedit /etc/selinux/config
+  ```
+* ❌ **نسيان إعادة تشغيل الجهاز أو استخدام setenforce → الوضع مايتغيرش بعد reboot**
+  🔧 حل: تأكد إن الملف اتعدل:
+
+  ```bash
+  grep SELINUX= /etc/selinux/config
+  ```
+* ❌ **كتابة السطر غلط (مثلاً SELINUX=permissiv)** → السيستم هيرجع للوضع الافتراضي Enforcing
+  🔧 راجع spelling كويس.
+* ❌ **الاعتقاد إن setenforce بيغيره بشكل دائم** → لأ، ده بيأثر لحد الـ reboot بس.
+* ❌ **عدم التحقق من حالة SELinux بعد التغيير**
+  🔧 استخدم:
+
+  ```bash
+  sestatus
+  ```
+
+---
+
+#### 5) الحاجات المرتبطة (Related topics / exam mapping)
+
+* أوامر: `getenforce`, `setenforce`, `sestatus`
+* ملف مهم: `/etc/selinux/config`
+* RHCSA Objective: **"Configure and use SELinux"**
+
+---
+
+#### 6) سوال شبهه في بيئة عمل (Workplace scenario — similar question)
+
+Scenario: You are troubleshooting why Apache is failing to serve files from `/srv/www`. Your manager asks you to temporarily put SELinux into permissive mode to confirm whether SELinux is blocking access.
+
+✅ **Acceptance criteria:**
+
+* SELinux must be in permissive mode (confirmed with `getenforce`).
+* After test, SELinux should be put back to enforcing mode.
+
+🔒 **Constraints:**
+
+* No reboot allowed during troubleshooting.
+* Must log SELinux events during the test for later review.
+
+💡 **Hints:**
+
+* Use `setenforce 0` to go permissive, then `setenforce 1` to revert.
+* Use `journalctl -t setroubleshoot` or `ausearch -m avc` to review logs.
+
+---
+
+#### 7) تعديلات مقترحة لرفع/تخفيض مستوى الصعوبة (Suggested variations)
+
+* 🟢 **أسهل:**
+
+  * بس استخدم `getenforce` لعرض الوضع الحالي بدون تغييره.
+  * جرّب `setenforce 0` فقط بدون تعديل الملف (مؤقت).
+
+* 🔴 **أصعب:**
+
+  * خلي السؤال يطلب تفعيل وضع permissive لعملية معينة باستخدام boolean مناسب (مثلاً httpd\_can\_network\_connect).
+  * اطلب استخدام `semanage` لإدارة السياسات بدل تعديل ملف config.
+
+---
+
+#### 8) مراجعة سريعة وخطة تمرين (Quick review + practice plan)
+
+📝 **تمارين سريعة:**
+
+1. اعرض الوضع الحالي لـ SELinux.
+
+```bash
+getenforce
+```
+
+2. حوّل الوضع لـ permissive مؤقتاً ورجعه تاني لـ enforcing.
+
+```bash
+sudo setenforce 0
+sudo setenforce 1
+```
+
+3. عدل `/etc/selinux/config` وخلي الوضع Permissive، اعمل reboot وتأكد إنه محفوظ.
+
+📚 **اقرأ:**
+
+* `man selinux`
+* `man setenforce`
+
+🔎 **ابحث عن:**
+"Troubleshoot SELinux AVC denials RHEL 9"
+
+---
+
+#### 9) أي تحسينات أو تعليقات إضافية منك (Optional improvements I add)
+
+💡 كان ممكن السؤال يطلب كمان ترجيع الوضع لـ enforcing بعد ما تخلص troubleshooting — لأن ده practice كويسة في البيئات الحقيقية عشان متسيبش السيستم في وضع أقل أمان.
+
+---
+
+تحب أجهزلك سؤال عملي أصعب عن SELinux فيه تعديل boolean أو إعادة label لمجلد (زي `restorecon -Rv` على مجلد الويب)؟ ده بيجي كتير في الامتحان.
+
 
 💡 كان ممكن السؤال يطلب استخدام **UUID** بدل `/dev/sdbX` في `/etc/fstab` لأنه أفضل practice لتفادي مشاكل لو ترتيب الأقراص اتغير بعد reboot.
 
